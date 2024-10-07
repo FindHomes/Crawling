@@ -24,12 +24,23 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    //JdbcTemplate 추가
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // Hibernate Spatial 의존성
+    implementation 'org.hibernate:hibernate-spatial:6.4.4.Final' // Hibernate 버전에 맞게 조정
+
+    // JTS (Java Topology Suite) 의존성
+    implementation 'org.locationtech.jts:jts-core:1.18.2'
+    // Selenium
+    implementation ("org.seleniumhq.selenium:selenium-java:4.20.0")
 }
 
 tasks.named('test') {
