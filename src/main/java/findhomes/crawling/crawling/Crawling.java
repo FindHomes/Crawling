@@ -31,6 +31,12 @@ public class Crawling {
         options.addArguments("no-sandbox"); // 샌드박스 비활성화
         options.addArguments("--disable-dev-shm-usage"); // /dev/shm 메모리 사용 비활성화
         options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36");
+        // 이미지 로드 비활성화
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("profile.managed_default_content_settings.images", 2);
+        prefs.put("profile.managed_default_content_settings.css", 2); // CSS 비활성화
+        options.setExperimentalOption("prefs", prefs);
+
         if (!isShowing) {
             options.addArguments("headless=new");
         }
@@ -44,7 +50,7 @@ public class Crawling {
         this.driver.get(url);
     }
 
-    public void openUrlNewTab(String url) {
+    public void openUrlNewTab(String url, int waitMs) {
         // 현재 창의 핸들 저장
         String originalWindow = driver.getWindowHandle();
         // 새로운 탭 열기
@@ -53,6 +59,12 @@ public class Crawling {
         newTab.get(url);
         // 기존 창 닫기
         driver.switchTo().window(originalWindow).close();
+        // 기다리기
+        try {
+            Thread.sleep(waitMs);
+        } catch (InterruptedException ignored) {
+
+        }
         // 새로운 탭으로 포커스 이동 (탭이 2개 이상 있을 경우 마지막 탭으로 이동)
         for (String windowHandle : driver.getWindowHandles()) {
             driver.switchTo().window(windowHandle);

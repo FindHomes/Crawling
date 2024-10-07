@@ -15,8 +15,11 @@ public class CheckController {
     private final CheckService checkService;
 
     @GetMapping("/status/update")
-    public ResponseEntity<Void> statusUpdate(@RequestParam Integer page) {
-        checkService.check(page);
+    public ResponseEntity<Void> statusUpdate(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "30") Integer limit
+    ) {
+        checkService.check(page, limit);
 
         return ResponseEntity.ok(null);
     }

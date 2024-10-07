@@ -4,6 +4,9 @@ import findhomes.crawling.checkstatus.domain.HouseForCheck;
 import findhomes.crawling.crawling.Crawling;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -13,9 +16,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CheckService {
-    public static final int PAGE_LIMIT = 50;
     public static final int MAX_WAIT_TIME = 5;
     public static final String CHECK_SELECTOR = ".fnzBWk h1";
+    public static final String MORE_THAN_3 = ".jKiLYt";
 
     private final CheckRepository checkRepository;
 
@@ -23,13 +26,13 @@ public class CheckService {
         return checkRepository.findAll();
     }
 
-    public void check(int page) {
+    public void check(int page, int limit) {
         while (true) {
             Crawling crawling = new Crawling()
                     .setDriverAtServer(false)
                     .setWaitTime(MAX_WAIT_TIME);
             // house page로 가져오기. 없으면 page 0부터 다시.
-            List<HouseForCheck> houses = getHousesByPage(page);
+            List<HouseForCheck> houses = getHousesByPage(page, limit);
             page++;
             if (houses.isEmpty()) {
                 page = 0;
@@ -43,7 +46,20 @@ public class CheckService {
                 if (house.getStatus().equals("DELETED")) {
                     continue;
                 }
-                crawling.openUrlNewTab(house.getUrl());
+                try {
+                    crawling.openUrlNewTab(house.getUrl(), 2000);
+                } catch (Exception e) {
+                    log.error("[[open url에서 오류]]", e);
+                }
+                // 3번 이상 본 매물 팝업 지우기
+                try {
+                    WebElement element = crawling.getDriver().findElement(By.cssSelector(MORE_THAN_3));
+                    element.click();
+                } catch (NoSuchElementException ignored) {
+
+                } catch (Exception ignored) {
+
+                }
                 // check 요소가 없다면 = 매물이 삭제 or 비공개
                 if (!crawling.waitForElementByCssSelector(CHECK_SELECTOR)) {
                     house.setStatus("DELETED");
@@ -53,10 +69,15 @@ public class CheckService {
                 checkRepository.update(house);
             }
             crawling.quitDriver();
+            try {
+                Thread.sleep(10000); // 5000ms = 5초
+            } catch (InterruptedException ignored) {
+
+            }
         }
     }
 
-    public List<HouseForCheck> getHousesByPage(int page) {
-        return checkRepository.findByPage(page, PAGE_LIMIT);
+    public List<HouseForCheck> getHousesByPage(int page, int limit) {
+        return checkRepository.findByPage(page, limit);
     }
 }
