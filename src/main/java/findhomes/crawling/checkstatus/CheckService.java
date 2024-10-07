@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CheckService {
-    public static final int PAGE_LIMIT = 100;
+    public static final int PAGE_LIMIT = 50;
     public static final int MAX_WAIT_TIME = 5;
     public static final String CHECK_SELECTOR = ".fnzBWk h1";
 
@@ -23,8 +23,7 @@ public class CheckService {
         return checkRepository.findAll();
     }
 
-    public void check() {
-        int page = 0;
+    public void check(int page) {
         while (true) {
             Crawling crawling = new Crawling()
                     .setDriverAtServer(false)
@@ -40,6 +39,10 @@ public class CheckService {
 
             // 크롤링 하기
             for (HouseForCheck house : houses) {
+                // 이미 status가 DELETED가 된건 넘어감
+                if (house.getStatus().equals("DELETED")) {
+                    continue;
+                }
                 crawling.openUrlNewTab(house.getUrl());
                 // check 요소가 없다면 = 매물이 삭제 or 비공개
                 if (!crawling.waitForElementByCssSelector(CHECK_SELECTOR)) {
